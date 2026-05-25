@@ -11,11 +11,8 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
-import {
-  adminLogin,
-  isAdminLoggedIn,
-  ADMIN_CREDENTIALS,
-} from "@/lib/adminAuth";
+import { adminLogin } from "@/lib/api";
+import { isAdminLoggedIn, ADMIN_CREDENTIALS } from "@/lib/adminAuth";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -33,16 +30,20 @@ export default function AdminLoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    const success = adminLogin(email, password);
-    if (success) {
-      router.push("/admin/dashboard");
-    } else {
-      setError("Invalid email or password");
+    if (!email || !password) {
+      setError("Please enter email and password");
+      return;
     }
-    setLoading(false);
+    setLoading(true);
+    try {
+      const token = await adminLogin(email, password);
+      localStorage.setItem("adminToken", token);
+      router.push("/admin/dashboard");
+    } catch {
+      setError("Invalid email or password");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

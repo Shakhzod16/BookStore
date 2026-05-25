@@ -5,18 +5,8 @@ export const ADMIN_CREDENTIALS = {
 
 export function isAdminLoggedIn(): boolean {
   if (typeof window === "undefined") return false;
-  return localStorage.getItem("adminToken") === "learnbooks-admin-2024";
-}
-
-export function adminLogin(email: string, password: string): boolean {
-  if (
-    email === ADMIN_CREDENTIALS.email &&
-    password === ADMIN_CREDENTIALS.password
-  ) {
-    localStorage.setItem("adminToken", "learnbooks-admin-2024");
-    return true;
-  }
-  return false;
+  const token = localStorage.getItem("adminToken");
+  return !!token && token.length > 10;
 }
 
 export function adminLogout(): void {

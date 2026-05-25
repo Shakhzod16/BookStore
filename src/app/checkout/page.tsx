@@ -18,7 +18,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { THE_BOOK } from "@/lib/constants";
-import { formatPrice, generateOrderId, generateDownloadToken } from "@/lib/utils";
+import { createOrder } from "@/lib/api";
+import { formatPrice } from "@/lib/utils";
 
 type PaymentMethod = "card" | "crypto" | "click" | "payme";
 
@@ -192,24 +193,34 @@ export default function CheckoutPage() {
 
   const handlePayment = async () => {
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    const orderId = generateOrderId();
-    const token = generateDownloadToken();
-    localStorage.setItem(
-      "lastOrder",
-      JSON.stringify({
-        orderId,
-        token,
-        customerName: form.name,
-        customerEmail: form.email,
-        paymentMethod,
-        amount: THE_BOOK.price,
-        bookTitle: THE_BOOK.title,
-        createdAt: new Date().toISOString(),
-        status: "paid",
-      })
-    );
-    router.push("/order-success");
+    try {
+      const order = await createOrder({
+        customer_name: form.name,
+        customer_email: form.email,
+        payment_method: paymentMethod,
+      });
+
+      localStorage.setItem(
+        "lastOrder",
+        JSON.stringify({
+          orderId: order.id,
+          customerName: order.customer_name,
+          customerEmail: order.customer_email,
+          paymentMethod: order.payment_method,
+          amount: order.amount,
+          bookTitle: "The Complete JavaScript & Web Development Guide",
+          createdAt: order.created_at,
+          status: order.status,
+        })
+      );
+
+      router.push("/order-success");
+    } catch (error) {
+      console.error("Order creation failed:", error);
+      setErrors({ general: "Something went wrong. Please try again." });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -380,6 +391,13 @@ export default function CheckoutPage() {
                     );
                   })}
                 </div>
+
+                {errors.general && (
+                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span>{errors.general}</span>
+                  </div>
+                )}
 
                 <div className="rounded-xl bg-gray-100 p-4 text-sm text-gray-700">
                   {getPaymentInfo()}

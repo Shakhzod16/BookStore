@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import Base, engine
-from app.routers import admin, download, orders, payments
+from app.routers import admin, download, orders
 
 Base.metadata.create_all(bind=engine)
 
@@ -24,7 +24,6 @@ app.add_middleware(
 app.include_router(orders.router)
 app.include_router(admin.router)
 app.include_router(download.router)
-app.include_router(payments.router)
 
 
 @app.get("/")

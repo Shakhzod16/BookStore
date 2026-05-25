@@ -1,22 +1,83 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Eye,
   CheckCircle,
   X,
 } from "lucide-react";
+import {
+  adminGetOrders,
+  adminUpdateStatus,
+  adminSendEmail,
+  type OrderResponse,
+} from "@/lib/api";
 import { MOCK_ORDERS } from "@/lib/mockOrders";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { StatusBadge, PAYMENT_LABELS } from "@/lib/adminUi";
 import type { Order } from "@/types";
+
+function mapOrder(o: OrderResponse): Order {
+  return {
+    id: o.id,
+    customerName: o.customer_name,
+    customerEmail: o.customer_email,
+    amount: o.amount,
+    status: o.status as Order["status"],
+    paymentMethod: o.payment_method as Order["paymentMethod"],
+    createdAt:
+      typeof o.created_at === "string"
+        ? o.created_at
+        : new Date(o.created_at).toISOString(),
+    downloadToken: o.download_token,
+  };
+}
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "paid">("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem("adminToken");
+    if (!token) return;
+    setLoading(true);
+    adminGetOrders(token)
+      .then((data) => {
+        setOrders(data.map(mapOrder));
+        setLoading(false);
+      })
+      .catch(() => {
+        setOrders(MOCK_ORDERS);
+        setLoading(false);
+      });
+  }, []);
+
+  const handleMarkPaid = async (orderId: string) => {
+    const token = localStorage.getItem("adminToken") || "";
+    await adminUpdateStatus(token, orderId, "paid");
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === orderId ? { ...o, status: "paid" as Order["status"] } : o
+      )
+    );
+    setSelectedOrder((prev) =>
+      prev?.id === orderId ? { ...prev, status: "paid" } : prev
+    );
+  };
+
+  const handleSendEmail = async (orderId: string) => {
+    const token = localStorage.getItem("adminToken") || "";
+    try {
+      await adminSendEmail(token, orderId);
+      alert("Email sent successfully!");
+    } catch {
+      alert("Failed to send email. Check SMTP settings.");
+    }
+  };
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -26,15 +87,6 @@ export default function AdminOrdersPage() {
     const matchesStatus = statusFilter === "all" || order.status === "paid";
     return matchesSearch && matchesStatus;
   });
-
-  const updateOrder = (id: string, updates: Partial<Order>) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, ...updates } : o))
-    );
-    setSelectedOrder((prev) =>
-      prev?.id === id ? { ...prev, ...updates } : prev
-    );
-  };
 
   return (
     <div className="space-y-6">
@@ -98,51 +150,63 @@ export default function AdminOrdersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-mono text-xs">{order.id}</td>
-                  <td className="px-6 py-4 font-medium">{order.customerName}</td>
-                  <td className="px-6 py-4 text-gray-600">
-                    {order.customerEmail}
-                  </td>
-                  <td className="px-6 py-4">
-                    {PAYMENT_LABELS[order.paymentMethod]}
-                  </td>
-                  <td className="px-6 py-4">
-                    <StatusBadge status={order.status} />
-                  </td>
-                  <td className="px-6 py-4 text-gray-600">
-                    {formatDate(order.createdAt)}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 font-semibold text-gray-900">
-                    {formatPrice(order.amount)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedOrder(order)}
-                        className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-indigo-600"
-                        aria-label="View order"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      {order.status === "pending" && (
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: 8 }).map((__, j) => (
+                      <td key={j} className="px-6 py-4">
+                        <div className="h-4 animate-pulse rounded bg-gray-200" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : (
+                filteredOrders.map((order) => (
+                  <tr key={order.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 font-mono text-xs">{order.id}</td>
+                    <td className="px-6 py-4 font-medium">
+                      {order.customerName}
+                    </td>
+                    <td className="px-6 py-4 text-gray-600">
+                      {order.customerEmail}
+                    </td>
+                    <td className="px-6 py-4">
+                      {PAYMENT_LABELS[order.paymentMethod]}
+                    </td>
+                    <td className="px-6 py-4">
+                      <StatusBadge status={order.status} />
+                    </td>
+                    <td className="px-6 py-4 text-gray-600">
+                      {formatDate(order.createdAt)}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 font-semibold text-gray-900">
+                      {formatPrice(order.amount)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={() =>
-                            updateOrder(order.id, { status: "paid" })
-                          }
-                          className="rounded-lg p-2 text-green-600 hover:bg-green-50"
-                          aria-label="Mark as paid"
+                          onClick={() => setSelectedOrder(order)}
+                          className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-indigo-600"
+                          aria-label="View order"
                         >
-                          <CheckCircle className="h-4 w-4" />
+                          <Eye className="h-4 w-4" />
                         </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        {order.status === "pending" && (
+                          <button
+                            type="button"
+                            onClick={() => handleMarkPaid(order.id)}
+                            className="rounded-lg p-2 text-green-600 hover:bg-green-50"
+                            aria-label="Mark as paid"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -210,9 +274,7 @@ export default function AdminOrdersPage() {
               {selectedOrder.status === "pending" && (
                 <button
                   type="button"
-                  onClick={() =>
-                    updateOrder(selectedOrder.id, { status: "paid" })
-                  }
+                  onClick={() => handleMarkPaid(selectedOrder.id)}
                   className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
                 >
                   Mark as Paid
@@ -221,7 +283,7 @@ export default function AdminOrdersPage() {
               {selectedOrder.status === "paid" && (
                 <button
                   type="button"
-                  onClick={() => alert("Email sent!")}
+                  onClick={() => handleSendEmail(selectedOrder.id)}
                   className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
                 >
                   Send Download Link
@@ -231,7 +293,13 @@ export default function AdminOrdersPage() {
                 <button
                   type="button"
                   onClick={() =>
-                    updateOrder(selectedOrder.id, { status: "refunded" })
+                    setOrders((prev) =>
+                      prev.map((o) =>
+                        o.id === selectedOrder.id
+                          ? { ...o, status: "refunded" }
+                          : o
+                      )
+                    )
                   }
                   className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
                 >
