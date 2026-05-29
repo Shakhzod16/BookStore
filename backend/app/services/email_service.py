@@ -62,12 +62,6 @@ def send_download_email(
     </html>
     """
 
-    if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
-        print(
-            f"[DEV] Download email for {customer_email}: {download_url}"
-        )
-        return True
-
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = f"Your LearnBooks Order — Download Ready! ({order_id})"
