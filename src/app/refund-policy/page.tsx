@@ -1,3 +1,8 @@
+export const metadata = {
+  title: "LearnBooks | Refund Policy",
+  description: "LearnBooks 30-day money back guarantee and refund policy.",
+};
+
 export default function RefundPolicyPage() {
   return (
     <div className="flex flex-col">
@@ -9,7 +14,7 @@ export default function RefundPolicyPage() {
           <h1 className="text-4xl font-bold text-white sm:text-5xl">
             Refund Policy
           </h1>
-          <p className="mt-6 text-lg text-gray-400">Last updated: January 1, 2025</p>
+          <p className="mt-6 text-lg text-gray-400">Last updated: January 1, 2026</p>
         </div>
       </section>
 

@@ -2,6 +2,12 @@ import Link from "next/link";
 import { BookOpen, Code, Infinity } from "lucide-react";
 import { THE_BOOK } from "@/lib/constants";
 
+export const metadata = {
+  title: "LearnBooks | About Us",
+  description:
+    "Learn about LearnBooks and our mission to make programming education accessible.",
+};
+
 const VALUES = [
   {
     icon: BookOpen,

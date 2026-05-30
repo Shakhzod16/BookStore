@@ -1,5 +1,11 @@
 import FaqAccordion from "./FaqAccordion";
 
+export const metadata = {
+  title: "LearnBooks | FAQ",
+  description:
+    "Frequently asked questions about LearnBooks - payments, downloads, refunds and more.",
+};
+
 export default function FaqPage() {
   return (
     <div className="flex flex-col">
