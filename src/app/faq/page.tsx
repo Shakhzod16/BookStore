@@ -3,21 +3,24 @@ import FaqAccordion from "./FaqAccordion";
 export const metadata = {
   title: "LearnBooks | FAQ",
   description:
-    "Frequently asked questions about LearnBooks - payments, downloads, refunds and more.",
+    "Frequently asked questions about LearnBooks — payments, downloads, refunds and more.",
 };
 
 export default function FaqPage() {
   return (
     <div className="flex flex-col">
       <section
-        className="px-4 py-20 text-center md:px-6 lg:px-8"
-        style={{ backgroundColor: "#0f172a" }}
+        style={{ background: "#0f172a" }}
+        className="py-20 text-center"
       >
-        <div className="mx-auto max-w-3xl">
-          <h1 className="text-4xl font-bold text-white sm:text-5xl">
+        <div className="mx-auto max-w-3xl px-4">
+          <p className="mb-4 text-sm font-medium uppercase tracking-wider text-indigo-400">
+            Support
+          </p>
+          <h1 className="mb-4 text-4xl font-bold text-white md:text-5xl">
             Frequently Asked Questions
           </h1>
-          <p className="mt-6 text-lg text-gray-400">
+          <p className="text-lg text-gray-400">
             Everything you need to know about LearnBooks
           </p>
         </div>
