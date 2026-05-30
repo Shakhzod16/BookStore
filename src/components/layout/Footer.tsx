@@ -111,7 +111,7 @@ export default function Footer() {
       <div className="border-t border-gray-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-4 md:px-6 lg:px-8">
           <p className="text-center text-sm text-gray-500">
-            © 2025 LearnBooks. All rights reserved.
+            © 2026 LearnBooks. All rights reserved.
           </p>
         </div>
       </div>

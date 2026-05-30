@@ -57,7 +57,7 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-7xl min-h-[calc(100vh-8rem)] flex-col items-center gap-12 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-xl text-center lg:text-left">
             <span className="inline-block rounded-full bg-indigo-600 px-4 py-1 text-sm font-medium text-white">
-              New Release 2024
+              New Release 2026
             </span>
             <h1 className="mt-6 text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
               Master JavaScript & Web Development
